@@ -75,6 +75,22 @@ function goals(state = [], action) {
   }
 }
 
+function checkAndDispatch(store, action) {
+  if (
+    action.type === ADD_TODO &&
+    action.todo.text.toLowerCase().includes("bitcoin")
+  ) {
+    alert("That is a bad idea");
+  } else if (
+    action.type === ADD_GOAL &&
+    action.goal.text.toLowerCase().includes("bitcoin")
+  ) {
+    alert("That is a bad idea");
+  } else {
+    store.dispatch(action);
+  }
+}
+
 const store = Redux.createStore(Redux.combineReducers({ todos, goals }));
 store.subscribe(() => console.log(`the new state is`, store.getState()));
 store.subscribe(() => {
@@ -94,7 +110,8 @@ function addTodo() {
   const text = input.value;
   input.value = "";
 
-  store.dispatch(
+  checkAndDispatch(
+    store,
     addTodoAction({
       id: generateId(),
       done: false,
@@ -107,7 +124,8 @@ function addGoal() {
   const text = input.value;
   input.value = "";
 
-  store.dispatch(
+  checkAndDispatch(
+    store,
     addGoalAction({
       id: generateId(),
       text,

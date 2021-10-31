@@ -89,15 +89,24 @@ function checker(store) {
       ) {
         alert("That is a bad idea");
       } else {
-        next(action);
+        return next(action);
       }
     };
   };
 }
 
+const logger = (store) => (next) => (action) => {
+  console.group(action.type);
+  console.log(action);
+  const result = next(action);
+  console.log(store.getState());
+  console.groupEnd();
+  return result;
+};
+
 const store = Redux.createStore(
   Redux.combineReducers({ todos, goals }),
-  Redux.applyMiddleware(checker)
+  Redux.applyMiddleware(checker, logger)
 );
 store.subscribe(() => console.log(`the new state is`, store.getState()));
 store.subscribe(() => {

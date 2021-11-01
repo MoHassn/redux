@@ -1,15 +1,22 @@
 class App extends React.Component {
-  componentDidMount() {
+  async componentDidMount() {
     const { store } = this.props;
     store.subscribe(() => this.forceUpdate());
+    const { fetchTodos, fetchGoals } = API;
+    Promise.all([fetchTodos(), fetchGoals()]).then(([todos, goals]) => {
+      this.props.store.dispatch(receiveDataAction(todos, goals));
+    });
   }
 
   render() {
     const { store } = this.props;
-    const { todos, goals } = store.getState();
+    const { todos, goals, loading } = store.getState();
+
+    if (loading === true) {
+      return <h3>Loading Data</h3>;
+    }
     return (
       <div>
-        {console.log("renders")}
         <Todos todos={todos} store={store} />
         <Goals goals={goals} store={store} />
       </div>
@@ -37,21 +44,32 @@ function List({ items, remove, toggle }) {
 }
 class Todos extends React.Component {
   addTodo = (e) => {
+    e.preventDefault();
     const text = this.input.value;
-    this.input.value = "";
-    console.log("input", this.input);
-    this.props.store.dispatch(
-      addTodoAction({
-        id: generateId(),
-        done: false,
-        text,
+
+    API.saveTodo(text)
+      .then((todo) => {
+        this.props.store.dispatch(addTodoAction(todo));
+        this.input.value = "";
       })
-    );
+      .catch((e) => alert("An Error occurred, please try again"));
   };
 
-  removeItem = (todo) => this.props.store.dispatch(removeTodoAction(todo.id));
+  removeItem = (todo) => {
+    this.props.store.dispatch(removeTodoAction(todo.id));
+    API.deleteTodo(todo.id).catch((e) => {
+      this.props.store.dispatch(addTodoAction(todo));
+      alert("An Error occurred, Please try again");
+    });
+  };
 
-  toggleItem = (todo) => this.props.store.dispatch(toggleTodoAction(todo.id));
+  toggleItem = (todo) => {
+    this.props.store.dispatch(toggleTodoAction(todo.id));
+    API.saveTodoToggle(todo.id).catch((e) => {
+      this.props.store.dispatch(toggleTodoAction(todo.id));
+      alert("An Error occurred, Please try again");
+    });
+  };
 
   render() {
     return (
@@ -75,18 +93,23 @@ class Todos extends React.Component {
 
 class Goals extends React.Component {
   addGoal = (e) => {
+    e.preventDefault();
     const text = this.input.value;
-    this.input.value = "";
-
-    this.props.store.dispatch(
-      addGoalAction({
-        id: generateId(),
-        text,
+    API.saveGoal(text)
+      .then((goal) => {
+        this.props.store.dispatch(addGoalAction(goal));
+        this.input.value = "";
       })
-    );
+      .catch((e) => alert("An Error occurred, please try again"));
   };
 
-  removeItem = (goal) => this.props.store.dispatch(removeGoalAction(goal.id));
+  removeItem = (goal) => {
+    this.props.store.dispatch(removeGoalAction(goal.id));
+    API.deleteGoal(goal.id).catch((e) => {
+      this.props.store.dispatch(addGoalAction(goal));
+      alert("An Error occurred, Please try again");
+    });
+  };
 
   render() {
     return (

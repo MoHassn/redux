@@ -13,6 +13,7 @@ const REMOVE_TODO = "REMOVE_TODO";
 const TOGGLE_TODO = "TOGGLE_TODO";
 const ADD_GOAL = "ADD_GOAL";
 const REMOVE_GOAL = "REMOVE_GOAL";
+const RECEIVE_DATA = "RECEIVE_DATA";
 
 // action creators
 
@@ -47,10 +48,19 @@ function removeGoalAction(id) {
     id,
   };
 }
+function receiveDataAction(todos, goals) {
+  return {
+    type: RECEIVE_DATA,
+    todos,
+    goals,
+  };
+}
 
 // reducers
 function todos(state = [], action) {
   switch (action.type) {
+    case RECEIVE_DATA:
+      return action.todos;
     case ADD_TODO:
       return state.concat(action.todo);
     case REMOVE_TODO:
@@ -66,10 +76,20 @@ function todos(state = [], action) {
 
 function goals(state = [], action) {
   switch (action.type) {
+    case RECEIVE_DATA:
+      return action.goals;
     case ADD_GOAL:
       return state.concat(action.goal);
     case REMOVE_GOAL:
       return state.filter((goal) => goal.id !== action.id);
+    default:
+      return state;
+  }
+}
+function loading(state = true, action) {
+  switch (action.type) {
+    case RECEIVE_DATA:
+      return false;
     default:
       return state;
   }
@@ -105,7 +125,7 @@ const logger = (store) => (next) => (action) => {
 };
 
 const store = Redux.createStore(
-  Redux.combineReducers({ todos, goals }),
+  Redux.combineReducers({ todos, goals, loading }),
   Redux.applyMiddleware(checker, logger)
 );
 store.subscribe(() => console.log(`the new state is`, store.getState()));

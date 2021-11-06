@@ -2,10 +2,8 @@ class App extends React.Component {
   async componentDidMount() {
     const { store } = this.props;
     store.subscribe(() => this.forceUpdate());
-    const { fetchTodos, fetchGoals } = API;
-    Promise.all([fetchTodos(), fetchGoals()]).then(([todos, goals]) => {
-      this.props.store.dispatch(receiveDataAction(todos, goals));
-    });
+
+    store.dispatch(handleInitialData());
   }
 
   render() {
@@ -45,14 +43,9 @@ function List({ items, remove, toggle }) {
 class Todos extends React.Component {
   addTodo = (e) => {
     e.preventDefault();
-    const text = this.input.value;
-
-    API.saveTodo(text)
-      .then((todo) => {
-        this.props.store.dispatch(addTodoAction(todo));
-        this.input.value = "";
-      })
-      .catch((e) => alert("An Error occurred, please try again"));
+    this.props.store.dispatch(
+      handleAddTodo(this.input.value, () => (this.input.value = ""))
+    );
   };
 
   removeItem = (todo) => {
@@ -60,11 +53,7 @@ class Todos extends React.Component {
   };
 
   toggleItem = (todo) => {
-    this.props.store.dispatch(toggleTodoAction(todo.id));
-    API.saveTodoToggle(todo.id).catch((e) => {
-      this.props.store.dispatch(toggleTodoAction(todo.id));
-      alert("An Error occurred, Please try again");
-    });
+    this.props.store.dispatch(handleToggleTodo(id));
   };
 
   render() {
@@ -90,21 +79,13 @@ class Todos extends React.Component {
 class Goals extends React.Component {
   addGoal = (e) => {
     e.preventDefault();
-    const text = this.input.value;
-    API.saveGoal(text)
-      .then((goal) => {
-        this.props.store.dispatch(addGoalAction(goal));
-        this.input.value = "";
-      })
-      .catch((e) => alert("An Error occurred, please try again"));
+    this.props.store.dispatch(
+      handleAddGoal(this.input.value, () => (this.input.value = ""))
+    );
   };
 
   removeItem = (goal) => {
-    this.props.store.dispatch(removeGoalAction(goal.id));
-    API.deleteGoal(goal.id).catch((e) => {
-      this.props.store.dispatch(addGoalAction(goal));
-      alert("An Error occurred, Please try again");
-    });
+    this.props.store.dispatch(handleDeleteGoal(goal));
   };
 
   render() {

@@ -56,6 +56,16 @@ function receiveDataAction(todos, goals) {
   };
 }
 
+function handleDeleteTodo(todo) {
+  return (dispatch) => {
+    dispatch(removeTodoAction(todo.id));
+    API.deleteTodo(todo.id).catch((e) => {
+      dispatch(addTodoAction(todo));
+      alert("An Error occurred, Please try again");
+    });
+  };
+}
+
 // reducers
 function todos(state = [], action) {
   switch (action.type) {
@@ -95,6 +105,7 @@ function loading(state = true, action) {
   }
 }
 
+// Middleware
 function checker(store) {
   return function (next) {
     return function (action) {
@@ -124,8 +135,15 @@ const logger = (store) => (next) => (action) => {
   return result;
 };
 
+const thunk = (store) => (next) => (action) => {
+  if (typeof action === "function") {
+    return action(store.dispatch);
+  }
+  return next(action);
+};
+
 const store = Redux.createStore(
   Redux.combineReducers({ todos, goals, loading }),
-  Redux.applyMiddleware(checker, logger)
+  Redux.applyMiddleware(thunk, checker, logger)
 );
 store.subscribe(() => console.log(`the new state is`, store.getState()));

@@ -56,11 +56,7 @@ class Todos extends React.Component {
   };
 
   removeItem = (todo) => {
-    this.props.store.dispatch(removeTodoAction(todo.id));
-    API.deleteTodo(todo.id).catch((e) => {
-      this.props.store.dispatch(addTodoAction(todo));
-      alert("An Error occurred, Please try again");
-    });
+    this.props.store.dispatch(handleDeleteTodo(todo));
   };
 
   toggleItem = (todo) => {

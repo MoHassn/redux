@@ -135,15 +135,8 @@ const logger = (store) => (next) => (action) => {
   return result;
 };
 
-const thunk = (store) => (next) => (action) => {
-  if (typeof action === "function") {
-    return action(store.dispatch);
-  }
-  return next(action);
-};
-
 const store = Redux.createStore(
   Redux.combineReducers({ todos, goals, loading }),
-  Redux.applyMiddleware(thunk, checker, logger)
+  Redux.applyMiddleware(ReduxThunk.default, checker, logger)
 );
 store.subscribe(() => console.log(`the new state is`, store.getState()));

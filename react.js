@@ -1,16 +1,48 @@
-class App extends React.Component {
-  async componentDidMount() {
-    const { store } = this.props;
-    store.subscribe(() => this.forceUpdate());
+const Context = React.createContext();
 
-    store.dispatch(handleInitialData());
+function Provider({ value, children }) {
+  return <Context.Provider value={value}>{children}</Context.Provider>;
+}
+
+function connect(mapStateToProps) {
+  return (Component) => {
+    class Receiver extends React.Component {
+      componentDidMount() {
+        const { store } = this.props;
+
+        this.unsubscribe = store.subscribe(() => this.forceUpdate());
+      }
+      componentWillUnmount() {
+        this.unsubscribe();
+      }
+      render() {
+        const { dispatch, getState } = this.props.store;
+        const state = getState();
+        const neededState = mapStateToProps(state);
+
+        return <Component {...neededState} dispatch={dispatch} />;
+      }
+    }
+
+    function ConnectedComponent() {
+      return (
+        <Context.Consumer>
+          {(store) => <Receiver store={store} />}
+        </Context.Consumer>
+      );
+    }
+
+    return ConnectedComponent;
+  };
+}
+
+class App extends React.Component {
+  componentDidMount() {
+    this.props.dispatch(handleInitialData());
   }
 
   render() {
-    const { store } = this.props;
-    const { loading } = store.getState();
-
-    if (loading === true) {
+    if (this.props.loading === true) {
       return <h3>Loading Data</h3>;
     }
     return (
@@ -76,17 +108,7 @@ class Todos extends React.Component {
   }
 }
 
-function TodosContainer(props) {
-  return (
-    <Context.Consumer>
-      {(store) => {
-        const { todos } = store.getState();
-        return <Todos dispatch={store.dispatch} todos={todos} />;
-      }}
-    </Context.Consumer>
-  );
-}
-
+const TodosContainer = connect((state) => ({ todos: state.todos }))(Todos);
 class Goals extends React.Component {
   addGoal = (e) => {
     e.preventDefault();
@@ -115,27 +137,9 @@ class Goals extends React.Component {
   }
 }
 
-function GoalsContainer() {
-  return (
-    <Context.Consumer>
-      {(store) => {
-        const { goals } = store.getState();
-        return <Goals dispatch={store.dispatch} goals={goals} />;
-      }}
-    </Context.Consumer>
-  );
-}
+const GoalsContainer = connect((state) => ({ goals: state.goals }))(Goals);
 
-const Context = React.createContext();
-
-function Provider({ value, children }) {
-  return <Context.Provider value={value}>{children}</Context.Provider>;
-}
-function AppContainer() {
-  return (
-    <Context.Consumer>{(store) => <App store={store} />}</Context.Consumer>
-  );
-}
+const AppContainer = connect((state) => ({ loading: state.loading }))(App);
 
 ReactDOM.render(
   <Provider value={store}>

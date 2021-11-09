@@ -1,41 +1,3 @@
-const Context = React.createContext();
-
-function Provider({ value, children }) {
-  return <Context.Provider value={value}>{children}</Context.Provider>;
-}
-
-function connect(mapStateToProps) {
-  return (Component) => {
-    class Receiver extends React.Component {
-      componentDidMount() {
-        const { store } = this.props;
-
-        this.unsubscribe = store.subscribe(() => this.forceUpdate());
-      }
-      componentWillUnmount() {
-        this.unsubscribe();
-      }
-      render() {
-        const { dispatch, getState } = this.props.store;
-        const state = getState();
-        const neededState = mapStateToProps(state);
-
-        return <Component {...neededState} dispatch={dispatch} />;
-      }
-    }
-
-    function ConnectedComponent() {
-      return (
-        <Context.Consumer>
-          {(store) => <Receiver store={store} />}
-        </Context.Consumer>
-      );
-    }
-
-    return ConnectedComponent;
-  };
-}
-
 class App extends React.Component {
   componentDidMount() {
     this.props.dispatch(handleInitialData());
@@ -108,7 +70,9 @@ class Todos extends React.Component {
   }
 }
 
-const TodosContainer = connect((state) => ({ todos: state.todos }))(Todos);
+const TodosContainer = ReactRedux.connect((state) => ({ todos: state.todos }))(
+  Todos
+);
 class Goals extends React.Component {
   addGoal = (e) => {
     e.preventDefault();
@@ -137,13 +101,17 @@ class Goals extends React.Component {
   }
 }
 
-const GoalsContainer = connect((state) => ({ goals: state.goals }))(Goals);
+const GoalsContainer = ReactRedux.connect((state) => ({ goals: state.goals }))(
+  Goals
+);
 
-const AppContainer = connect((state) => ({ loading: state.loading }))(App);
+const AppContainer = ReactRedux.connect((state) => ({
+  loading: state.loading,
+}))(App);
 
 ReactDOM.render(
-  <Provider value={store}>
+  <ReactRedux.Provider store={store}>
     <AppContainer />
-  </Provider>,
+  </ReactRedux.Provider>,
   document.getElementById("app")
 );

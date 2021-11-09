@@ -8,15 +8,15 @@ class App extends React.Component {
 
   render() {
     const { store } = this.props;
-    const { todos, goals, loading } = store.getState();
+    const { loading } = store.getState();
 
     if (loading === true) {
       return <h3>Loading Data</h3>;
     }
     return (
       <div>
-        <Todos todos={todos} store={store} />
-        <Goals goals={goals} store={store} />
+        <TodosContainer />
+        <GoalsContainer />
       </div>
     );
   }
@@ -43,17 +43,17 @@ function List({ items, remove, toggle }) {
 class Todos extends React.Component {
   addTodo = (e) => {
     e.preventDefault();
-    this.props.store.dispatch(
+    this.props.dispatch(
       handleAddTodo(this.input.value, () => (this.input.value = ""))
     );
   };
 
   removeItem = (todo) => {
-    this.props.store.dispatch(handleDeleteTodo(todo));
+    this.props.dispatch(handleDeleteTodo(todo));
   };
 
   toggleItem = (todo) => {
-    this.props.store.dispatch(handleToggleTodo(id));
+    this.props.dispatch(handleToggleTodo(todo.id));
   };
 
   render() {
@@ -76,16 +76,27 @@ class Todos extends React.Component {
   }
 }
 
+function TodosContainer(props) {
+  return (
+    <Context.Consumer>
+      {(store) => {
+        const { todos } = store.getState();
+        return <Todos dispatch={store.dispatch} todos={todos} />;
+      }}
+    </Context.Consumer>
+  );
+}
+
 class Goals extends React.Component {
   addGoal = (e) => {
     e.preventDefault();
-    this.props.store.dispatch(
+    this.props.dispatch(
       handleAddGoal(this.input.value, () => (this.input.value = ""))
     );
   };
 
   removeItem = (goal) => {
-    this.props.store.dispatch(handleDeleteGoal(goal));
+    this.props.dispatch(handleDeleteGoal(goal));
   };
 
   render() {
@@ -104,4 +115,31 @@ class Goals extends React.Component {
   }
 }
 
-ReactDOM.render(<App store={store} />, document.getElementById("app"));
+function GoalsContainer() {
+  return (
+    <Context.Consumer>
+      {(store) => {
+        const { goals } = store.getState();
+        return <Goals dispatch={store.dispatch} goals={goals} />;
+      }}
+    </Context.Consumer>
+  );
+}
+
+const Context = React.createContext();
+
+function Provider({ value, children }) {
+  return <Context.Provider value={value}>{children}</Context.Provider>;
+}
+function AppContainer() {
+  return (
+    <Context.Consumer>{(store) => <App store={store} />}</Context.Consumer>
+  );
+}
+
+ReactDOM.render(
+  <Provider value={store}>
+    <AppContainer />
+  </Provider>,
+  document.getElementById("app")
+);
